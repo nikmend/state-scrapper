@@ -8,6 +8,29 @@ from scrapy.exceptions import NotConfigured
 import mysql.connector
 import json
 
+from itemadapter import ItemAdapter
+from scrapy.exceptions import DropItem
+
+
+class DuplicatesPipeline:
+
+    def __init__(self):
+        self.ids_seen = set()
+
+    def process_item(self, item, spider):
+        adapter = ItemAdapter(item)
+        if adapter['id_web'] in self.ids_seen:
+            raise DropItem("Duplicate item found: %r" % item)
+            print("Unique intems ", len(self.ids_seen))
+        else:
+            self.ids_seen.add(adapter['id_web'])
+            return item
+
+    def close_spider(self, spider):
+        print("--------Unique total intems ", len(self.ids_seen))
+
+
+
 
 class StateScrapperPipeline(object):
 
@@ -64,14 +87,13 @@ class DatabasePipeline(object):
         columns = ', '.join(item.keys())
         self.query = "INSERT INTO %s ( %s ) VALUES ( %s )" % ("states", columns, placeholders)
         self.items.extend([item.values()])
-
         return item
 
     def close_spider(self, spider):
         try:
             self.cursor.executemany(self.query, self.items)
             self.conn.commit()
-            print("MYSQL   " + str(self.cursor.rowcount)+  "record inserted.")
+            print("MYSQL   " + str(self.cursor.rowcount) + " record inserted.")
             self.items = []
         except Exception as e:
             if 'MySQL server has gone away' in str(e):

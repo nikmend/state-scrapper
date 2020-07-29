@@ -67,7 +67,8 @@ DOWNLOAD_DELAY = 5.0
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'state_scrapper.pipelines.StateScrapperPipeline': 100,
-    #'state_scrapper.pipelines.DatabasePipeline': 300
+    'state_scrapper.pipelines.DuplicatesPipeline': 200,
+    'state_scrapper.pipelines.DatabasePipeline': 300
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
