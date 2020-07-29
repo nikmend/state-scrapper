@@ -3,10 +3,8 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 # -*- coding: utf-8 -*-
 import scrapy
-import requests
-from scrapy.linkextractors import LinkExtractor
-from lxml import html
 from ..items import StateScrapperItem
+from ..utilsMobicrol import get_totalPropertiesCount
 from datetime import datetime
 
 
@@ -14,31 +12,43 @@ from datetime import datetime
 class StateSpider(scrapy.Spider):
     name = "stateCommon"
     allowed_domains = ["metrocuadrado.com"]
-    start_urls = ('https://www.metrocuadrado.com/venta/bogota/',)
+    start_urls = ['https://www.metrocuadrado.com/venta/bogota/',]
     ajaxurl = 'https://www.metrocuadrado.com/search/list/ajax?mciudad=bogota&currentPage={}&totalPropertiesCount={}&totalUsedPropertiesCount={}&totalNewPropertiesCount={}'
     totalNewPropertiesCount = 0
     totalUsedPropertiesCount = 0
     totalPropertiesCount = 0
 
+    def populate_Starts(self):
+        self.totalNewPropertiesCount , self.totalUsedPropertiesCount = get_totalPropertiesCount(self.start_urls[0])
+        print("/*" * 10)
+        print(self.totalNewPropertiesCount, self.totalUsedPropertiesCount)
+        self.totalPropertiesCount = self.totalNewPropertiesCount + self.totalUsedPropertiesCount
+        print(self.totalPropertiesCount)
+        print("/*" * 10)
+        for page in range(int(self.totalPropertiesCount / 50)):
+            self.start_urls.append(self.ajaxurl.format(page, self.totalPropertiesCount, self.totalUsedPropertiesCount,
+                                                       self.totalNewPropertiesCount))
+        print('added '+len(self.start_urls)+'new Urls')
+
+
     def start_requests(self):
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1'}
+        scrapy.Request(url=self.start_urls[0], callback=self.parse, headers=headers)
+        #self.populate_Starts()
         for url in self.start_urls:
-            ##yield Request(url, headers=headers)
+
+            print('????? IN LOOP: ', url)
             yield scrapy.Request(url=url, callback=self.parse, headers=headers)
 
     def parse(self, response):
         if self.totalPropertiesCount == 0 :
-            self.totalNewPropertiesCount= int(response.css('#total-new-properties-count-list::attr(value)').extract()[0])
-            self.totalUsedPropertiesCount= int(response.css('#total-used-properties-count-list::attr(value)').extract()[0])
-            print("/*"*10)
+            self.totalNewPropertiesCount = int(response.css('#total-new-properties-count-list::attr(value)').extract()[0])
+            self.totalUsedPropertiesCount = int(response.css('#total-used-properties-count-list::attr(value)').extract()[0])
+            print("/*" * 10)
             print(self.totalNewPropertiesCount, self.totalUsedPropertiesCount)
-            self.totalPropertiesCount= self.totalNewPropertiesCount+self.totalUsedPropertiesCount
+            self.totalPropertiesCount = self.totalNewPropertiesCount + self.totalUsedPropertiesCount
             print(self.totalPropertiesCount)
             print("/*" * 10)
-            for page in range(int(self.totalPropertiesCount / 50)):
-                ##yield Request(url, headers=headers)
-                self.start_urls.append(self.ajaxurl.format(page, self.totalPropertiesCount, self.totalUsedPropertiesCount,
-                                             self.totalNewPropertiesCount))
 
         for prop in response.css('.detail_wrap'):
             item = StateScrapperItem()
@@ -60,7 +70,6 @@ class StateSpider(scrapy.Spider):
             except IndexError as e:
                 item['bathrooms'] = 'NULL'
                 self.logger.info("Item " + item['id_web'] + " hasn´t bathrooms\n" + "---------" * 6)
-
             try:
                 item['bedrooms'] = prop.css('.price_desc .desc_rs .rooms span:nth_child(2)::text').extract()[0]
             except IndexError as e:
@@ -73,10 +82,3 @@ class StateSpider(scrapy.Spider):
                 self.logger.info("Item " + item['id_web'] + " hasn´t garages\n" + "---------" * 6)
 
             yield item
-
-        next_page = response.xpath('.//a[@class="button next"]/@href').extract()
-        if next_page:
-            next_href = next_page[0]
-            next_page_url = 'http://sfbay.craigslist.org' + next_href
-            request = scrapy.Request(url=next_page_url)
-            yield request
