@@ -21,13 +21,13 @@ class DuplicatesPipeline:
         adapter = ItemAdapter(item)
         if adapter['id_web'] in self.ids_seen:
             raise DropItem("Duplicate item found: %r" % item)
-            print("Unique intems ", len(self.ids_seen))
+            print("Unique items ", len(self.ids_seen))
         else:
             self.ids_seen.add(adapter['id_web'])
             return item
 
     def close_spider(self, spider):
-        print("--------Unique total intems ", len(self.ids_seen))
+        print("--------Unique total items ", len(self.ids_seen))
 
 
 

@@ -43,7 +43,7 @@ class StateSpider(scrapy.Spider):
             self.totalUsedPropertiesCount = int(
                 response.css('#total-used-properties-count-list::attr(value)').extract()[0])
             self.populate_Starts()
-            for url in self.start_urls[32:100]:
+            for url in self.start_urls[10:30]:
                 print('????? IN NESTED LOOP: ', url)
                 yield scrapy.Request(url=url, method='POST', callback=self.parse, headers=self.headers)
 
@@ -52,7 +52,7 @@ class StateSpider(scrapy.Spider):
             for prop in response.css('.detail_wrap'):
                 if prop.attrib['businesstype'] in ["Venta y Arriendo", 'venta']:
                     item = StateScrapperItem()
-                    item['type'] = prop.attrib['propertytype'] + " - "+ prop.attrib['businesstype']
+                    item['type'] = prop.attrib['propertytype'] + " - " + prop.attrib['businesstype']
                     item['id_web'] = prop.attrib['id']
                     item['city'] = prop.attrib['cityname']
                     item['url'] = prop.css('.content .header .data-details-id::attr(href)').extract()[0]
@@ -68,7 +68,7 @@ class StateSpider(scrapy.Spider):
                         self.logger.info("Item " + item['id_web'] + " hasn´t sector\n" + "---------" * 6)
                     try:
                         item['bathrooms'] = \
-                        prop.css('.price_desc .desc_rs .bathrooms span:nth_child(2)::text').extract()[0]
+                            prop.css('.price_desc .desc_rs .bathrooms span:nth_child(2)::text').extract()[0]
                     except IndexError as e:
                         item['bathrooms'] = 'NULL'
                         self.logger.info("Item " + item['id_web'] + " hasn´t bathrooms\n" + "---------" * 6)
