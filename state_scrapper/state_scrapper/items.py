@@ -7,15 +7,16 @@
 
 import scrapy
 
+
 class StateScrapperItem(scrapy.Item):
     id_web = scrapy.Field()
     title = scrapy.Field()
     url = scrapy.Field()
-    type = scrapy.Field()
+    type_ads = scrapy.Field()
     price = scrapy.Field()
     city = scrapy.Field()
     sector = scrapy.Field()
-    address = scrapy.Field() #TODO: lookup in https://reverse.geocoder.ls.hereapi.com/6.2/reversegeocode.json?apiKey=w0AqGhEuRk7POniPcharjnQ7uKIWgvFhJZbbaAe2hOw&mode=retrieveAddresses&prox=4.724455,-74.03006
+    address = scrapy.Field()
     latitude = scrapy.Field()
     longitude = scrapy.Field()
     built_area = scrapy.Field()
@@ -28,11 +29,10 @@ class StateScrapperItem(scrapy.Item):
     bathrooms = scrapy.Field()
     garages = scrapy.Field()
     ## params
-    features = scrapy.Field() #esto es un Json
+    description = scrapy.Field()
+    postal_code = scrapy.Field()
+    features = scrapy.Field()  # esto es un Json
     agency_name = scrapy.Field()
     agency_address = scrapy.Field()
     agency_contact = scrapy.Field()
     agency_phone = scrapy.Field()
-
-
-

@@ -41,7 +41,7 @@ class StateScrapperPipeline(object):
         self.file.close()
 
     def process_item(self, item, spider):
-        # print(item)
+        #print(item)
         # self.file.write(line)
         return item
 
